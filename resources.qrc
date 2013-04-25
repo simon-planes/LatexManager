@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/imgs">
+        <file>imgs/icn_build.svg</file>
+        <file>imgs/icn_edit.svg</file>
+        <file>imgs/icn_quit.svg</file>
+        <file>imgs/icn_view.svg</file>
+    </qresource>
+</RCC>
