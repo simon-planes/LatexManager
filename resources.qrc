@@ -4,5 +4,6 @@
         <file>imgs/icn_edit.svg</file>
         <file>imgs/icn_quit.svg</file>
         <file>imgs/icn_view.svg</file>
+        <file>imgs/icn_clean.svg</file>
     </qresource>
 </RCC>

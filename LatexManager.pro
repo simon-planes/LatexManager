@@ -1,9 +1,11 @@
 SOURCES += \
     main.cpp \
-    mainframe.cpp
+    mainframe.cpp \
+    sourcechooser.cpp
 
 HEADERS += \
-    mainframe.h
+    mainframe.h \
+    sourcechooser.h
 
 RESOURCES += \
     resources.qrc

@@ -1,4 +1,5 @@
 #include "mainframe.h"
+#include "sourcechooser.h"
 
 MainFrame::MainFrame()
 {
@@ -20,20 +21,24 @@ MainFrame::MainFrame()
     btnBuild    = new QPushButton(QIcon(ICN_BUILD), "Build");
     btnView     = new QPushButton(QIcon(ICN_VIEW), "View");
     btnEdit     = new QPushButton(QIcon(ICN_EDIT), "Edit");
+    btnClean     = new QPushButton(QIcon(ICN_CLEAN), "Clean");
     btnQuit     = new QPushButton(QIcon(ICN_QUIT), "Quit");
     btnBuild->setIconSize(QSize(ICN_WIDTH,ICN_HEIGHT));
     btnView->setIconSize(QSize(ICN_WIDTH,ICN_HEIGHT));
     btnEdit->setIconSize(QSize(ICN_WIDTH,ICN_HEIGHT));
+    btnClean->setIconSize(QSize(ICN_WIDTH,ICN_HEIGHT));
     btnQuit->setIconSize(QSize(ICN_WIDTH,ICN_HEIGHT));
     btnView->setEnabled(false);
     connect(btnBuild, SIGNAL(clicked()), this, SLOT(build()));
     connect(btnView, SIGNAL(clicked()), this, SLOT(view()));
     connect(btnEdit, SIGNAL(clicked()), this, SLOT(edit()));
+    connect(btnClean, SIGNAL(clicked()), this, SLOT(clean()));
     connect(btnQuit, SIGNAL(clicked()), qApp, SLOT(quit()));
     buttonsLayout->addWidget(btnBuild,0,0);
     buttonsLayout->addWidget(btnView,0,1);
     buttonsLayout->addWidget(btnEdit,1,0);
-    buttonsLayout->addWidget(btnQuit,1,1);
+    buttonsLayout->addWidget(btnClean,1,1);
+    buttonsLayout->addWidget(btnQuit,2,1);
 
     /* left panel */
     setDirTree("/home/"); //QDir::currentPath()
@@ -55,33 +60,42 @@ MainFrame::MainFrame()
     lblDirPath->setMinimumHeight(LB_HEIGHT);
     lblDirPath->setMaximumHeight(LB_HEIGHT);
     lblFilePath = new QLabel("File:");
-    //lblDirPath->setWordWrap(true);
-    //lblFilePath->setWordWrap(true);
     labelsLayout->addWidget(lblDirPath);
     labelsLayout->addWidget(lblFilePath);
 
-    QGroupBox *groupCompilers = new QGroupBox("Compiler");
-    QButtonGroup *btnGroupCompilers = new QButtonGroup();
+    QGroupBox *groupBuilders = new QGroupBox("Builder");
+    QButtonGroup *btnGroupBuilders = new QButtonGroup();
     rdPdflatex = new QRadioButton("PDFLatex");
     rdLatexmale = new QRadioButton("latex-make");
-    btnGroupCompilers->addButton(rdPdflatex);
-    btnGroupCompilers->addButton(rdLatexmale);
-    QVBoxLayout *radiosLayout = new QVBoxLayout;
+    btnGroupBuilders->addButton(rdPdflatex);
+    btnGroupBuilders->addButton(rdLatexmale);
+    QHBoxLayout *radiosLayout = new QHBoxLayout;
     radiosLayout->addWidget(rdPdflatex);
     radiosLayout->addWidget(rdLatexmale);
-    groupCompilers->setLayout(radiosLayout);
+    groupBuilders->setLayout(radiosLayout);
     rdPdflatex->setChecked(true);
 
-    connect(btnGroupCompilers, SIGNAL(buttonClicked(int)), this, SLOT(updateCompiler(int)));
+    connect(btnGroupBuilders, SIGNAL(buttonClicked(int)), this, SLOT(updateBuildler(int)));
 
     rightLayout->addWidget(groupLabels);
-    rightLayout->addWidget(groupCompilers);
+    rightLayout->addWidget(groupBuilders);
     rightLayout->addLayout(buttonsLayout);
 
     centralLayout->addLayout(rightLayout);
 
     selectedFilePath = new QString("");
-    compiler = PDFLATEX;
+    sourceToBuild = new QString("");
+    builder = PDFLATEX;
+}
+
+QDir *MainFrame::getCurrentDir()
+{
+    return currentDir;
+}
+
+void MainFrame::setSourceToBuild(QString source)
+{
+    sourceToBuild = new QString(source);
 }
 
 /**
@@ -131,9 +145,9 @@ void MainFrame::selectFile(const QModelIndex &index)
 {
     *selectedFilePath = fileSystemModel->filePath(index);
     btnView->setEnabled(selectedFilePath->endsWith(".pdf")
-                          || selectedFilePath->endsWith(".tex")
-                          || selectedFilePath->endsWith(".png")
-                          || selectedFilePath->endsWith(".jpg"));
+                        || selectedFilePath->endsWith(".tex")
+                        || selectedFilePath->endsWith(".png")
+                        || selectedFilePath->endsWith(".jpg"));
     int idx = selectedFilePath->lastIndexOf("/");
     QString dirName;
     if (QDir(*selectedFilePath).exists())
@@ -172,24 +186,34 @@ void MainFrame::edit()
     }
 }
 
-void MainFrame::updateCompiler(int id)
+void MainFrame::updateBuildler(int id)
 {
     if (rdPdflatex->isChecked())
-        compiler = PDFLATEX;
+        builder = PDFLATEX;
     else
-        compiler = LATEXMAKE;
+        builder = LATEXMAKE;
 }
 
 void MainFrame::build()
 {
-    qDebug() << "compiler: "<<compiler;
-    if (compiler == PDFLATEX)
+    if (builder == PDFLATEX)
     {
-        QStringList list = currentDir->entryList();
-        QStringList::const_iterator constIterator;
-             for (constIterator = list.constBegin(); constIterator != list.constEnd();
-                    ++constIterator)
-                 qDebug() << (*constIterator).toLocal8Bit().constData() << endl;
-        QMessageBox::critical(this, "No tex source", "There is no tex source in the directory.");
+        /*SourceChooser *sourceChooser = new SourceChooser(this);
+        sourceChooser->show();*/
+        if (selectedFilePath->endsWith(".tex"))
+        {
+            QString cmd = "cd " + QString(currentDir->absolutePath()) +
+                    "; pdflatex " + *selectedFilePath +"; cd -";
+            system(cmd.toStdString().c_str());
+        }
+        else
+            QMessageBox::critical(this, "No tex source", "Select a tex format file.");
     }
+}
+
+void MainFrame::clean()
+{
+    QString cmd = "cd " + QString(currentDir->absolutePath()) +
+            "; rm -f *.aux *log *.backup *.toc *.out *.nav *.snm *.bbl *.blg *pdf.mk *~; cd -";
+    system(cmd.toStdString().c_str());
 }

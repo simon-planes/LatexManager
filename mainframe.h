@@ -2,7 +2,6 @@
 #define MAINFRAME_H
 
 #include <QtGui>
-#include <QFileSystemModel>
 
 #define MF_WIDTH    800
 #define MF_HEIGHT   480
@@ -19,8 +18,9 @@
 #define ICN_QUIT    "imgs/icn_quit.svg"
 #define ICN_VIEW    "imgs/icn_view.svg"
 #define ICN_BUILD   "imgs/icn_build.svg"
+#define ICN_CLEAN   "imgs/icn_clean.svg"
 
-enum Compiler {PDFLATEX, LATEXMAKE};
+enum Builder {PDFLATEX, LATEXMAKE};
 
 class MainFrame: public QWidget
 {
@@ -28,21 +28,26 @@ class MainFrame: public QWidget
 
     public:
         MainFrame();
+        QDir *getCurrentDir();
+        void setSourceToBuild(QString source);
 
     public slots:
         void selectFile(const QModelIndex &index);
         void view();
         void edit();
         void build();
-        void updateCompiler(int id);
+        void clean();
+        void updateBuildler(int id);
 
     private:
         QDir *currentDir;
         QString *selectedFilePath;
+        QString *sourceToBuild;
         QPushButton *btnQuit;
         QPushButton *btnBuild;
         QPushButton *btnView;
         QPushButton *btnEdit;
+        QPushButton *btnClean;
         QRadioButton *rdPdflatex;
         QRadioButton *rdLatexmale;
         QTreeView *treeView;
@@ -50,7 +55,7 @@ class MainFrame: public QWidget
         QLabel *lblFilePath;
         QLabel *lblDirPath;
 
-        Compiler compiler;
+        Builder builder;
 
         void setDirTree(QString path);
         QString *cleanString(QString s);
